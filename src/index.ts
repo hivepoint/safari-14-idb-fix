@@ -15,9 +15,13 @@ export default function idbReady(): Promise<void> {
 
   let intervalId: number;
 
-  return new Promise<void>((resolve) => {
-    const tryIdb = () => indexedDB.databases().finally(resolve);
+  const promise = new Promise<void>((resolve) => {
+    const resolver = () => resolve();
+    const tryIdb = () => indexedDB.databases().then(resolver).catch(resolver);
     intervalId = setInterval(tryIdb, 100);
     tryIdb();
-  }).finally(() => clearInterval(intervalId));
+  });
+
+  const ci = () => clearInterval(intervalId);
+  return promise.then(ci).catch(ci);
 }
